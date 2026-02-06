@@ -1,7 +1,7 @@
 ---
 name: snowflake
 description: Design and generate Snowflake Procedures, Java UDTFs, and Task orchestration using AVA placeholders and shard-based parallel execution (00..99).
-version: 0.2.0
+version: 0.1.0
 ---
 
 
