@@ -1,23 +1,9 @@
 ---
 name: snowflake
 description: Design and generate Snowflake Procedures, Java UDTFs, and Task orchestration using AVA placeholders and shard-based parallel execution (00..99).
-version: 0.1.0
+version: 0.2.0
 ---
 
-## Install
-
-Run any of the following:
-
-```bash
-# 1) Install from GitHub repo (recommended)
-npx skills add oswaldonisango/snowflake-skill
-
-# 2) Install from URL (raw.github.com)
-npx skills add https://raw.github.com/oswaldonisango/snowflake-skill/main/SKILL.md
-
-# 3) Install from URL (raw.githubusercontent.com)
-npx skills add https://raw.githubusercontent.com/oswaldonisango/snowflake-skill/main/SKILL.md
-```
 
 # Snowflake skill (AVA style)
 
@@ -95,6 +81,21 @@ Prefer returning a VARIANT JSON payload from procedures with:
 - min/max time windows used
 - phase marker
 
+## Manual Run Worksheet Mode 
+
+If the user asks to "run the procedure manually", "make it executable in a worksheet",
+or "convert SP variables to SET/$ variables", you MUST generate a manual-run worksheet script.
+
+This mode converts a stored procedure (LANGUAGE SQL) into a Snowsight Worksheet script by:
+- Replacing `:var` with `$var`
+- Replacing `:=` / `LET` with `SET var = ...;`
+- Preserving dynamic tables via `IDENTIFIER($var)`
+- Emitting explicit sections: INPUTS / START / PROCESS / END / CLEANUP
+- Adding optional `cntSync` gating to skip PROCESS when no data
+
+Follow: `manual_run_transpiler.md`
+
+
 ## Reference docs
 
 Follow these documents in this skill directory:
@@ -105,4 +106,5 @@ Follow these documents in this skill directory:
 - java_udtf.md
 - tasks_parallelize.md
 - naming_casd.md
+- manual_run_transpiler.md
 
