@@ -1,3 +1,21 @@
+#Skills repo
+
+##Structure
+
+```
+ava-skills/
+├── skills/
+│   ├── snowflake/
+│       ├── SKILL.md
+│       ├── references/
+│       └── template/
+│   └── <new-skill>/
+│       ├── SKILL.md
+│       ├── references/
+│       └── template/
+└── .github/workflows/         # CI/CD (auto tag + release)
+```
+
 ## Installation
 
 ### Prerequisites
@@ -20,14 +38,13 @@ If you don't have Node.js, install it from https://nodejs.org/ (LTS recommended)
 Run **one** of these options:
 
 ```bash
-# 1) Install from the GitHub repo (recommended)
-npx skills add oswaldonisango/snowflake-skill
+# 1) Install
+npx skills add oswaldonisango/skill
 
-# 2) Install from URL (raw.github.com)
-npx skills add https://raw.github.com/oswaldonisango/snowflake-skill/main/SKILL.md
-
-# 3) Install from URL (raw.githubusercontent.com)
-npx skills add https://raw.githubusercontent.com/oswaldonisango/snowflake-skill/main/SKILL.md
+# 2) Install 
+npx skills add oswaldonisango/skill --skill snowflake
+## Add more skills as they become available:
+## npx skill add oswaldonisango/skill --skill <skill-name>
 ```
 
 ### Verify installation (optional)
@@ -37,3 +54,10 @@ List your installed skills and confirm that `snowflake` appears:
 ```bash
 npx skills list
 ```
+
+
+## Available skills
+
+| Skill | Install command |
+|-------|-----------------|
+| **snowflake** (v0.1.0) | `npx skills add oswaldonisango/skill --skill snowflake` |
