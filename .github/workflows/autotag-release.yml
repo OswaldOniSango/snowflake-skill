@@ -2,7 +2,7 @@ name: Auto Tag + Release (multi-skill)
 
 on:
   push:
-    branches: ["prod"]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
