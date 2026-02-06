@@ -1,10 +1,8 @@
-name: Auto Tag + Release (from SKILL.md version)
+name: Auto Tag + Release (multi-skill)
 
 on:
   push:
-    branches: ["main"]
-    paths:
-      - "SKILL.md"
+    branches: ["prod"]
   workflow_dispatch:
 
 permissions:
@@ -19,56 +17,64 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract version from SKILL.md
-        id: v
+      - name: Tag and release each skill with a new version
         run: |
           set -euo pipefail
-          test -f SKILL.md || (echo "SKILL.md missing at repo root" && exit 1)
 
-          # Extract "version: x.y.z" from frontmatter
-          VERSION=$(python3 - << 'PY'
-          import re, pathlib
-          txt = pathlib.Path("SKILL.md").read_text(encoding="utf-8")
-          m = re.search(r'(?m)^\s*version:\s*([0-9]+(?:\.[0-9]+){1,3})\s*$', txt)
-          if not m:
-            raise SystemExit("Could not find version: in SKILL.md frontmatter")
-          print(m.group(1))
-          PY
-          )
+          python3 - << 'PYEOF'
+          import re, pathlib, subprocess, sys
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          for skill_md in sorted(pathlib.Path("skills").glob("*/SKILL.md")):
+              spath = skill_md.parent
+              name = spath.name
 
-      - name: Check if tag exists
-        id: exists
+              txt = skill_md.read_text(encoding="utf-8")
+              m = re.search(r'(?m)^\s*version:\s*([0-9]+(?:\.[0-9]+){1,3})\s*$', txt)
+              if not m:
+                  print(f"[{name}] No version found in SKILL.md – skipping")
+                  continue
+
+              version = m.group(1)
+              tag = f"{name}-v{version}"
+
+              # Check if tag already exists
+              result = subprocess.run(
+                  ["git", "rev-parse", tag],
+                  capture_output=True, text=True
+              )
+              if result.returncode == 0:
+                  print(f"[{name}] Tag {tag} already exists – skipping")
+                  continue
+
+              print(f"[{name}] Creating tag {tag} ...")
+              subprocess.run(["git", "tag", tag], check=True)
+              subprocess.run(["git", "push", "origin", tag], check=True)
+              print(f"[{name}] Tag {tag} pushed.")
+
+              # Write tag to file so the release step can pick it up
+              pathlib.Path("/tmp/new_tags.txt").open("a").write(
+                  f"{name}|{tag}|{str(spath)}\n"
+              )
+
+          PYEOF
+
+      - name: Create GitHub Releases for new tags
         run: |
           set -euo pipefail
-          TAG="${{ steps.v.outputs.tag }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag $TAG already exists; skipping."
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+
+          if [ ! -f /tmp/new_tags.txt ]; then
+            echo "No new tags to release."
+            exit 0
           fi
 
-      - name: Create tag
-        if: steps.exists.outputs.exists == 'false'
-        run: |
-          set -euo pipefail
-          TAG="${{ steps.v.outputs.tag }}"
-          git tag "$TAG"
-          git push origin "$TAG"
-
-      - name: Create GitHub Release
-        if: steps.exists.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.v.outputs.tag }}
-          name: ${{ steps.v.outputs.tag }}
-          generate_release_notes: true
-          files: |
-            SKILL.md
-            *.md
-            templates/*.sql
+          while IFS='|' read -r SKILL_NAME TAG SKILL_PATH; do
+            echo "Creating release for $TAG ..."
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --generate-notes \
+              "$SKILL_PATH"/SKILL.md \
+              "$SKILL_PATH"/*.md \
+              || echo "WARNING: release creation for $TAG had issues"
+          done < /tmp/new_tags.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
