@@ -17,6 +17,7 @@ npx skills add https://raw.github.com/oswaldonisango/snowflake-skill/main/SKILL.
 
 # 3) Install from URL (raw.githubusercontent.com)
 npx skills add https://raw.githubusercontent.com/oswaldonisango/snowflake-skill/main/SKILL.md
+```
 
 # Snowflake skill (AVA style)
 
